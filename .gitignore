@@ -1,0 +1,8 @@
+# Arquivos de Configuração Sensíveis
+.env
+
+# Configurações de IDE
+.vscode/
+*.code-workspace
+
+# Outros

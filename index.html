@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Controle de Vale Transporte</title>
+    
+    <!-- PWA Meta Tags & Favicon -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
+    <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans antialiased min-h-screen">
+
+    <div class="max-w-md mx-auto w-full min-h-screen relative pb-24 bg-slate-900 shadow-2xl">
+        
+        <header class="bg-slate-800 text-white p-5 shadow-md sticky top-0 z-10 border-b border-slate-700">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-500/20 text-blue-400 p-2 rounded-xl">
+                    <i class="ph-fill ph-cards text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold leading-tight">Meus Cartões VT</h1>
+                    <p id="header-subtitle" class="text-slate-400 text-xs mt-0.5">Calculadora de Saldos</p>
+                </div>
+            </div>
+        </header>
+
+        <main class="p-4 relative z-0">
+            <div id="view-calculator" class="fade-in">
+                <div class="bg-slate-800 rounded-2xl shadow-sm border border-slate-700 p-5 mb-4 border-l-4 border-l-blue-500">
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="font-bold text-slate-300 flex items-center gap-2">
+                            <i class="ph-fill ph-bus text-blue-500"></i> Salto x Salto
+                        </label>
+                        <span class="text-xs bg-blue-900/50 text-blue-400 px-2 py-1 rounded-md font-semibold border border-blue-800">Cartão 1</span>
+                    </div>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-semibold text-lg">R$</span>
+                        <input type="text" id="balanceC1" placeholder="0,00" inputmode="decimal" 
+                               class="w-full bg-slate-900 border-2 border-slate-700 text-white text-2xl font-bold rounded-xl py-3 pl-14 pr-4 focus:outline-none focus:border-blue-500 transition-colors placeholder-slate-700">
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 rounded-2xl shadow-sm border border-slate-700 p-5 mb-5 border-l-4 border-l-purple-500">
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="font-bold text-slate-300 flex items-center gap-2">
+                            <i class="ph-fill ph-bus text-purple-500"></i> Salto x Indaiatuba
+                        </label>
+                        <span class="text-xs bg-purple-900/50 text-purple-400 px-2 py-1 rounded-md font-semibold border border-purple-800">Cartão 2</span>
+                    </div>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-semibold text-lg">R$</span>
+                        <input type="text" id="balanceC2" placeholder="0,00" inputmode="decimal" 
+                               class="w-full bg-slate-900 border-2 border-slate-700 text-white text-2xl font-bold rounded-xl py-3 pl-14 pr-4 focus:outline-none focus:border-purple-500 transition-colors placeholder-slate-700">
+                    </div>
+                </div>
+
+                <button onclick="calculateCards()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg flex justify-center items-center gap-2 active:scale-95 transition-transform mb-6">
+                    <i class="ph-bold ph-magic-wand text-xl"></i>
+                    Calcular Previsão
+                </button>
+
+                <div id="calc-message" class="hidden bg-red-900/50 text-red-400 p-3 rounded-lg text-sm font-medium mb-4 border border-red-800 flex items-center gap-2">
+                    <i class="ph-fill ph-warning-circle text-lg"></i> <span id="calc-message-text"></span>
+                </div>
+
+                <div id="results-container" class="hidden space-y-4">
+                    <h3 class="font-bold text-slate-500 uppercase text-xs tracking-wider text-center">Resultados da Simulação</h3>
+                    
+                    <div class="bg-slate-800 border border-blue-900/50 rounded-2xl p-4 fade-in">
+                        <h4 class="font-bold text-blue-400 mb-3 flex items-center gap-2">
+                            <i class="ph-fill ph-bus"></i> Cartão 1 (S. x S.)
+                        </h4>
+                        <div class="bg-slate-900 rounded-xl p-3 mb-3 border border-slate-700">
+                            <p class="text-xs text-slate-400 font-semibold mb-1">Acaba no dia:</p>
+                            <p id="res-date-c1" class="text-base font-bold text-white"></p>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="flex-1 bg-slate-900 rounded-xl p-3 border border-slate-700">
+                                <p class="text-xs text-slate-400 font-semibold">Viagens</p>
+                                <p id="res-trips-c1" class="text-lg font-bold text-blue-400"></p>
+                            </div>
+                            <div class="flex-1 bg-slate-900 rounded-xl p-3 border border-slate-700">
+                                <p class="text-xs text-slate-400 font-semibold">Sobra</p>
+                                <p id="res-rem-c1" class="text-lg font-bold text-slate-300"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800 border border-purple-900/50 rounded-2xl p-4 fade-in">
+                        <h4 class="font-bold text-purple-400 mb-3 flex items-center gap-2">
+                            <i class="ph-fill ph-bus"></i> Cartão 2 (S. x Ind.)
+                        </h4>
+                        <div class="bg-slate-900 rounded-xl p-3 mb-3 border border-slate-700">
+                            <p class="text-xs text-slate-400 font-semibold mb-1">Acaba no dia:</p>
+                            <p id="res-date-c2" class="text-base font-bold text-white"></p>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="flex-1 bg-slate-900 rounded-xl p-3 border border-slate-700">
+                                <p class="text-xs text-slate-400 font-semibold">Viagens</p>
+                                <p id="res-trips-c2" class="text-lg font-bold text-purple-400"></p>
+                            </div>
+                            <div class="flex-1 bg-slate-900 rounded-xl p-3 border border-slate-700">
+                                <p class="text-xs text-slate-400 font-semibold">Sobra</p>
+                                <p id="res-rem-c2" class="text-lg font-bold text-slate-300"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-settings" class="hidden fade-in">
+                
+                <div class="bg-slate-800 rounded-2xl shadow-sm border border-slate-700 p-5 mb-5">
+                    <h2 class="text-lg font-bold text-slate-200 mb-4 flex items-center gap-2">
+                        <i class="ph-fill ph-ticket text-blue-500"></i> Valor das Passagens
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-400 mb-1 flex justify-between">
+                                <span>Cartão 1 (Salto)</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">R$</span>
+                                <input type="text" id="cfgPriceC1" inputmode="decimal" class="w-full bg-slate-900 border border-slate-600 text-white rounded-lg py-2.5 pl-10 pr-3 focus:outline-none focus:border-blue-500 font-medium">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-400 mb-1 flex justify-between">
+                                <span>Cartão 2 (Indaiatuba)</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">R$</span>
+                                <input type="text" id="cfgPriceC2" inputmode="decimal" class="w-full bg-slate-900 border border-slate-600 text-white rounded-lg py-2.5 pl-10 pr-3 focus:outline-none focus:border-purple-500 font-medium">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 rounded-2xl shadow-sm border border-slate-700 p-5 mb-5">
+                    <h2 class="text-lg font-bold text-slate-200 mb-2 flex items-center gap-2">
+                        <i class="ph-fill ph-calendar-check text-blue-500"></i> Uso Semanal
+                    </h2>
+                    <p class="text-xs text-slate-400 mb-4">Quantas vezes pega CADA ônibus por dia?</p>
+                    
+                    <div class="grid grid-cols-[1fr_60px_60px] gap-2 mb-2 px-1">
+                        <div class="text-xs font-semibold text-slate-500 uppercase">Dia</div>
+                        <div class="text-[10px] font-bold text-blue-400 uppercase text-center leading-tight bg-slate-900 border border-slate-700 rounded p-1">C1<br>Salto</div>
+                        <div class="text-[10px] font-bold text-purple-400 uppercase text-center leading-tight bg-slate-900 border border-slate-700 rounded p-1">C2<br>Indaia.</div>
+                    </div>
+
+                    <div id="schedule-container" class="space-y-1.5"></div>
+                </div>
+
+                <button onclick="saveSettings()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-4 rounded-xl shadow-lg flex justify-center items-center gap-2 active:scale-95 transition-transform border border-slate-600">
+                    <i class="ph-bold ph-floppy-disk text-xl"></i>
+                    Salvar Configurações
+                </button>
+
+                <div id="cfg-message" class="hidden mt-4 bg-green-900/50 text-green-400 p-3 rounded-lg text-sm font-medium border border-green-800 flex items-center justify-center gap-2">
+                    <i class="ph-fill ph-check-circle text-lg"></i> Salvo com sucesso!
+                </div>
+
+            </div>
+        </main>
+
+        <nav class="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-slate-800 border-t border-slate-700 pb-safe z-50">
+            <div class="flex justify-around items-center h-16">
+                <button onclick="switchTab('calculator')" id="tab-calculator" class="flex-1 flex flex-col items-center justify-center gap-1 text-blue-400 transition-colors">
+                    <i class="ph-fill ph-calculator text-2xl"></i>
+                    <span class="text-[10px] font-bold uppercase tracking-wider">Calculadora</span>
+                </button>
+                <button onclick="switchTab('settings')" id="tab-settings" class="flex-1 flex flex-col items-center justify-center gap-1 text-slate-500 hover:text-slate-300 transition-colors">
+                    <i class="ph-fill ph-gear text-2xl"></i>
+                    <span class="text-[10px] font-bold uppercase tracking-wider">Configurar</span>
+                </button>
+            </div>
+        </nav>
+
+    </div>
+
+    <script>
+        const DAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+        const VISUAL_DAYS = [1, 2, 3, 4, 5, 6, 0];
+
+        let config = {
+            priceC1: 4.50,
+            priceC2: 6.00,
+            schedule: [
+                { c1: 0, c2: 0 },
+                { c1: 2, c2: 2 },
+                { c1: 2, c2: 2 },
+                { c1: 2, c2: 2 },
+                { c1: 2, c2: 2 },
+                { c1: 2, c2: 2 },
+                { c1: 0, c2: 0 },
+            ]
+        };
+
+        function parseBRFloat(valStr) {
+            if (!valStr) return 0;
+            let cleanStr = String(valStr).replace(/\./g, '').replace(',', '.');
+            return parseFloat(cleanStr) || 0;
+        }
+
+        function switchTab(tabName) {
+            const vCalc = document.getElementById('view-calculator');
+            const vSet = document.getElementById('view-settings');
+            const tCalc = document.getElementById('tab-calculator');
+            const tSet = document.getElementById('tab-settings');
+            const subtitle = document.getElementById('header-subtitle');
+
+            if (tabName === 'calculator') {
+                vCalc.classList.remove('hidden');
+                vSet.classList.add('hidden');
+                
+                tCalc.classList.add('text-blue-400');
+                tCalc.classList.remove('text-slate-500');
+                tSet.classList.remove('text-blue-400');
+                tSet.classList.add('text-slate-500');
+                
+                subtitle.innerText = "Calculadora de Saldos";
+            } else {
+                vCalc.classList.add('hidden');
+                vSet.classList.remove('hidden');
+                
+                tSet.classList.add('text-blue-400');
+                tSet.classList.remove('text-slate-500');
+                tCalc.classList.remove('text-blue-400');
+                tCalc.classList.add('text-slate-500');
+                
+                subtitle.innerText = "Ajuste de Preços e Rotina";
+                renderSettings();
+            }
+        }
+
+        function loadBalances() {
+            const savedBals = localStorage.getItem('vt_balances_v1');
+            if (savedBals) {
+                try {
+                    const balances = JSON.parse(savedBals);
+                    document.getElementById('balanceC1').value = balances.c1 || "";
+                    document.getElementById('balanceC2').value = balances.c2 || "";
+                } catch (e) {
+                    console.error("Erro ao ler saldos", e);
+                }
+            }
+        }
+
+        function saveBalances() {
+            const c1 = document.getElementById('balanceC1').value;
+            const c2 = document.getElementById('balanceC2').value;
+            localStorage.setItem('vt_balances_v1', JSON.stringify({ c1: c1, c2: c2 }));
+        }
+
+        function loadSettings() {
+            const saved = localStorage.getItem('vt_config_v3_dark');
+            if (saved) {
+                try {
+                    config = JSON.parse(saved);
+                } catch (e) {
+                    console.error("Erro ao ler storage", e);
+                }
+            }
+            renderSettings();
+        }
+
+        function saveSettings() {
+            config.priceC1 = parseBRFloat(document.getElementById('cfgPriceC1').value);
+            config.priceC2 = parseBRFloat(document.getElementById('cfgPriceC2').value);
+
+            for (let i = 0; i < 7; i++) {
+                config.schedule[i].c1 = parseInt(document.getElementById(`day_${i}_c1`).value) || 0;
+                config.schedule[i].c2 = parseInt(document.getElementById(`day_${i}_c2`).value) || 0;
+            }
+
+            localStorage.setItem('vt_config_v3_dark', JSON.stringify(config));
+            
+            const msg = document.getElementById('cfg-message');
+            msg.classList.remove('hidden');
+            setTimeout(() => { msg.classList.add('hidden'); }, 3000);
+        }
+
+        function renderSettings() {
+            document.getElementById('cfgPriceC1').value = config.priceC1.toFixed(2).replace('.', ',');
+            document.getElementById('cfgPriceC2').value = config.priceC2.toFixed(2).replace('.', ',');
+
+            const container = document.getElementById('schedule-container');
+            container.innerHTML = '';
+
+            VISUAL_DAYS.forEach(dayIndex => {
+                const isWeekend = dayIndex === 0 || dayIndex === 6;
+                const row = document.createElement('div');
+                row.className = `grid grid-cols-[1fr_60px_60px] gap-2 items-center p-2 rounded-lg border ${isWeekend ? 'bg-slate-900 border-slate-800' : 'bg-slate-800 border-slate-700'}`;
+                
+                row.innerHTML = `
+                    <div class="text-sm font-medium ${isWeekend ? 'text-slate-500' : 'text-slate-300'}">${DAYS[dayIndex]}</div>
+                    <div>
+                        <input type="number" id="day_${dayIndex}_c1" value="${config.schedule[dayIndex].c1}" min="0" inputmode="numeric" 
+                               class="w-full bg-slate-900 border border-slate-700 text-white rounded p-1.5 text-center text-sm font-semibold focus:outline-none focus:border-blue-500 transition-colors">
+                    </div>
+                    <div>
+                        <input type="number" id="day_${dayIndex}_c2" value="${config.schedule[dayIndex].c2}" min="0" inputmode="numeric" 
+                               class="w-full bg-slate-900 border border-slate-700 text-white rounded p-1.5 text-center text-sm font-semibold focus:outline-none focus:border-purple-500 transition-colors">
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+        }
+
+        function formatDate(dateObj) {
+            const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            return `${dateObj.toLocaleDateString('pt-BR', options)} - ${DAYS[dateObj.getDay()]}`;
+        }
+
+        function showMessage(text) {
+            const msgBox = document.getElementById('calc-message');
+            document.getElementById('calc-message-text').innerText = text;
+            msgBox.classList.remove('hidden');
+            document.getElementById('results-container').classList.add('hidden');
+        }
+
+        function simulateCard(startBalance, price, getTripsForDay) {
+            if (price <= 0 || startBalance < price) {
+                return { date: new Date(), totalTrips: 0, remainder: startBalance, active: false };
+            }
+
+            let hasTrips = false;
+            for(let i=0; i<7; i++) { if(getTripsForDay(i) > 0) hasTrips = true; }
+            if(!hasTrips) return { noSchedule: true };
+
+            let currentBal = startBalance;
+            let d = new Date();
+            d.setHours(0,0,0,0);
+            let totalTrips = 0;
+            let daysLimit = 730;
+
+            while (daysLimit > 0) {
+                let dayOfWeek = d.getDay();
+                let requiredTrips = getTripsForDay(dayOfWeek);
+
+                if (requiredTrips > 0) {
+                    let dailyCost = requiredTrips * price;
+                    
+                    if (currentBal >= dailyCost) {
+                        currentBal -= dailyCost;
+                        totalTrips += requiredTrips;
+                    } else {
+                        let tripsPossible = Math.floor(currentBal / price);
+                        currentBal -= tripsPossible * price;
+                        totalTrips += tripsPossible;
+                        break; 
+                    }
+                }
+                d.setDate(d.getDate() + 1);
+                daysLimit--;
+            }
+
+            return { date: d, totalTrips: totalTrips, remainder: currentBal, active: true };
+        }
+
+        function calculateCards() {
+            document.getElementById('calc-message').classList.add('hidden');
+            
+            let balC1Str = document.getElementById('balanceC1').value;
+            let balC2Str = document.getElementById('balanceC2').value;
+
+            saveBalances();
+
+            let balC1 = parseBRFloat(balC1Str);
+            let balC2 = parseBRFloat(balC2Str);
+
+            if (balC1Str === "" && balC2Str === "") {
+                showMessage("Insira o saldo de pelo menos um cartão.");
+                return;
+            }
+
+            let resultC1 = balC1Str !== "" ? simulateCard(balC1, config.priceC1, (dayIdx) => config.schedule[dayIdx].c1) : null;
+            let resultC2 = balC2Str !== "" ? simulateCard(balC2, config.priceC2, (dayIdx) => config.schedule[dayIdx].c2) : null;
+
+            if ((resultC1 && resultC1.noSchedule) || (resultC2 && resultC2.noSchedule)) {
+                showMessage("Aviso: Acesse 'Configurar' e defina os dias de uso.");
+                return;
+            }
+
+            document.getElementById('results-container').classList.remove('hidden');
+
+            const boxC1 = document.getElementById('res-date-c1').parentElement.parentElement;
+            if (resultC1 && resultC1.active) {
+                boxC1.classList.remove('hidden');
+                document.getElementById('res-date-c1').innerText = formatDate(resultC1.date);
+                document.getElementById('res-trips-c1').innerText = resultC1.totalTrips;
+                document.getElementById('res-rem-c1').innerText = formatCurrency(resultC1.remainder);
+            } else if (resultC1 && !resultC1.active) {
+                boxC1.classList.remove('hidden');
+                document.getElementById('res-date-c1').innerText = "Hoje (Saldo Insuficiente)";
+                document.getElementById('res-trips-c1').innerText = "0";
+                document.getElementById('res-rem-c1').innerText = formatCurrency(balC1);
+            } else {
+                boxC1.classList.add('hidden');
+            }
+
+            const boxC2 = document.getElementById('res-date-c2').parentElement.parentElement;
+            if (resultC2 && resultC2.active) {
+                boxC2.classList.remove('hidden');
+                document.getElementById('res-date-c2').innerText = formatDate(resultC2.date);
+                document.getElementById('res-trips-c2').innerText = resultC2.totalTrips;
+                document.getElementById('res-rem-c2').innerText = formatCurrency(resultC2.remainder);
+            } else if (resultC2 && !resultC2.active) {
+                boxC2.classList.remove('hidden');
+                document.getElementById('res-date-c2').innerText = "Hoje (Saldo Insuficiente)";
+                document.getElementById('res-trips-c2').innerText = "0";
+                document.getElementById('res-rem-c2').innerText = formatCurrency(balC2);
+            } else {
+                boxC2.classList.add('hidden');
+            }
+            
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        document.getElementById('balanceC1').addEventListener('input', saveBalances);
+        document.getElementById('balanceC2').addEventListener('input', saveBalances);
+
+        window.onload = () => {
+            loadSettings();
+            loadBalances();
+            switchTab('calculator');
+        };
+
+        // Registro do Service Worker para o PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registrado:', reg.scope))
+                    .catch(err => console.log('Falha ao registrar Service Worker:', err));
+            });
+        }
+    </script>
+</body>
+</html>
