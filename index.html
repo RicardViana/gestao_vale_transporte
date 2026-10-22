@@ -57,8 +57,8 @@
                     </div>
                     <div class="relative">
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-semibold text-lg">R$</span>
-                        <input type="text" id="balanceC1" placeholder="0,00" inputmode="decimal" 
-                               class="w-full bg-slate-900 border-2 border-slate-700 text-white text-2xl font-bold rounded-xl py-3 pl-14 pr-4 focus:outline-none focus:border-blue-500 transition-colors placeholder-slate-700">
+                        <input type="text" id="balanceC1" placeholder="0,00" inputmode="numeric" 
+                               class="w-full bg-slate-900 border-2 border-slate-700 text-white text-2xl font-bold rounded-xl py-3 pl-14 pr-4 focus:outline-none focus:border-blue-500 transition-colors placeholder-slate-700 mask-money">
                     </div>
                 </div>
 
@@ -71,8 +71,8 @@
                     </div>
                     <div class="relative">
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-semibold text-lg">R$</span>
-                        <input type="text" id="balanceC2" placeholder="0,00" inputmode="decimal" 
-                               class="w-full bg-slate-900 border-2 border-slate-700 text-white text-2xl font-bold rounded-xl py-3 pl-14 pr-4 focus:outline-none focus:border-purple-500 transition-colors placeholder-slate-700">
+                        <input type="text" id="balanceC2" placeholder="0,00" inputmode="numeric" 
+                               class="w-full bg-slate-900 border-2 border-slate-700 text-white text-2xl font-bold rounded-xl py-3 pl-14 pr-4 focus:outline-none focus:border-purple-500 transition-colors placeholder-slate-700 mask-money">
                     </div>
                 </div>
 
@@ -144,7 +144,7 @@
                             </label>
                             <div class="relative">
                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">R$</span>
-                                <input type="text" id="cfgPriceC1" inputmode="decimal" class="w-full bg-slate-900 border border-slate-600 text-white rounded-lg py-2.5 pl-10 pr-3 focus:outline-none focus:border-blue-500 font-medium">
+                                <input type="text" id="cfgPriceC1" inputmode="numeric" class="w-full bg-slate-900 border border-slate-600 text-white rounded-lg py-2.5 pl-10 pr-3 focus:outline-none focus:border-blue-500 font-medium mask-money">
                             </div>
                         </div>
                         <div>
@@ -153,7 +153,7 @@
                             </label>
                             <div class="relative">
                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">R$</span>
-                                <input type="text" id="cfgPriceC2" inputmode="decimal" class="w-full bg-slate-900 border border-slate-600 text-white rounded-lg py-2.5 pl-10 pr-3 focus:outline-none focus:border-purple-500 font-medium">
+                                <input type="text" id="cfgPriceC2" inputmode="numeric" class="w-full bg-slate-900 border border-slate-600 text-white rounded-lg py-2.5 pl-10 pr-3 focus:outline-none focus:border-purple-500 font-medium mask-money">
                             </div>
                         </div>
                     </div>
@@ -219,11 +219,24 @@
             ]
         };
 
-        // NOVO PARSER: Mais robusto e aceita tanto ponto quanto vírgula sem quebrar
+        // Função da Máscara de Dinheiro
+        function applyCurrencyMask(event) {
+            let input = event.target;
+            let value = input.value.replace(/\D/g, ""); // Remove tudo que não for número
+
+            if (value === "") {
+                input.value = "";
+                return;
+            }
+
+            value = (parseInt(value, 10) / 100).toFixed(2); // Divide por 100 para criar os centavos
+            input.value = value.replace('.', ','); // Coloca a vírgula brasileira
+            saveBalances(); // Salva automaticamente o saldo digitado
+        }
+
         function parseBRFloat(valStr) {
             if (!valStr) return 0;
             let str = String(valStr).trim();
-            
             if (str.includes(',')) {
                 let parts = str.split(',');
                 let decimal = parts.pop();
@@ -244,22 +257,18 @@
             if (tabName === 'calculator') {
                 vCalc.classList.remove('hidden');
                 vSet.classList.add('hidden');
-                
                 tCalc.classList.add('text-blue-400');
                 tCalc.classList.remove('text-slate-500');
                 tSet.classList.remove('text-blue-400');
                 tSet.classList.add('text-slate-500');
-                
                 subtitle.innerText = "Calculadora de Saldos";
             } else {
                 vCalc.classList.add('hidden');
                 vSet.classList.remove('hidden');
-                
                 tSet.classList.add('text-blue-400');
                 tSet.classList.remove('text-slate-500');
                 tCalc.classList.remove('text-blue-400');
                 tCalc.classList.add('text-slate-500');
-                
                 subtitle.innerText = "Ajuste de Preços e Rotina";
                 renderSettings();
             }
@@ -454,15 +463,9 @@
             loadBalances();
             switchTab('calculator');
 
-            // --- O HACK PARA O TECLADO DA SAMSUNG ---
-            // Transforma automaticamente qualquer ponto digitado numa vírgula na tela
-            document.querySelectorAll('input[inputmode="decimal"]').forEach(input => {
-                input.addEventListener('input', function() {
-                    if (this.value.includes('.')) {
-                        this.value = this.value.replace(/\./g, ',');
-                    }
-                    saveBalances();
-                });
+            // Aplica a máscara de dinheiro em todos os campos configurados
+            document.querySelectorAll('.mask-money').forEach(input => {
+                input.addEventListener('input', applyCurrencyMask);
             });
         };
 
