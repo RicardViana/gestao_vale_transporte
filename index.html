@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Controle de Vale Transporte</title>
     
-    <!-- PWA Meta Tags & Favicon -->
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="icon" type="image/x-icon" href="./assets/favicon.ico">
@@ -220,10 +219,19 @@
             ]
         };
 
+        // NOVO PARSER: Mais robusto e aceita tanto ponto quanto vírgula sem quebrar
         function parseBRFloat(valStr) {
             if (!valStr) return 0;
-            let cleanStr = String(valStr).replace(/\./g, '').replace(',', '.');
-            return parseFloat(cleanStr) || 0;
+            let str = String(valStr).trim();
+            
+            if (str.includes(',')) {
+                let parts = str.split(',');
+                let decimal = parts.pop();
+                let integer = parts.join('').replace(/\./g, '');
+                return parseFloat(integer + '.' + decimal) || 0;
+            } else {
+                return parseFloat(str) || 0;
+            }
         }
 
         function switchTab(tabName) {
@@ -264,9 +272,7 @@
                     const balances = JSON.parse(savedBals);
                     document.getElementById('balanceC1').value = balances.c1 || "";
                     document.getElementById('balanceC2').value = balances.c2 || "";
-                } catch (e) {
-                    console.error("Erro ao ler saldos", e);
-                }
+                } catch (e) {}
             }
         }
 
@@ -281,9 +287,7 @@
             if (saved) {
                 try {
                     config = JSON.parse(saved);
-                } catch (e) {
-                    console.error("Erro ao ler storage", e);
-                }
+                } catch (e) {}
             }
             renderSettings();
         }
@@ -445,20 +449,26 @@
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
 
-        document.getElementById('balanceC1').addEventListener('input', saveBalances);
-        document.getElementById('balanceC2').addEventListener('input', saveBalances);
-
         window.onload = () => {
             loadSettings();
             loadBalances();
             switchTab('calculator');
+
+            // --- O HACK PARA O TECLADO DA SAMSUNG ---
+            // Transforma automaticamente qualquer ponto digitado numa vírgula na tela
+            document.querySelectorAll('input[inputmode="decimal"]').forEach(input => {
+                input.addEventListener('input', function() {
+                    if (this.value.includes('.')) {
+                        this.value = this.value.replace(/\./g, ',');
+                    }
+                    saveBalances();
+                });
+            });
         };
 
-        // Registro do Service Worker para o PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Service Worker registrado:', reg.scope))
                     .catch(err => console.log('Falha ao registrar Service Worker:', err));
             });
         }

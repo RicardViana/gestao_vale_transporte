@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vt-cache-v2';
+const CACHE_NAME = 'vt-cache-v3';
 
 // Arquivos essenciais que o celular deve baixar para funcionar offline
 const urlsToCache = [
