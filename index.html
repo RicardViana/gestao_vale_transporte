@@ -48,6 +48,15 @@
 
         <main class="p-4 relative z-0">
             <div id="view-calculator" class="fade-in">
+                
+                <!-- Nova Orientação de Uso -->
+                <div class="bg-blue-900/20 border border-blue-900/50 rounded-xl p-4 mb-5 flex items-start gap-3">
+                    <i class="ph-fill ph-info text-blue-400 text-xl shrink-0 mt-0.5"></i>
+                    <p class="text-sm text-slate-300 leading-relaxed">
+                        Informe o <strong>saldo atual</strong> do seu VT nos campos abaixo. O aplicativo calculará automaticamente quantas viagens restam e a previsão de término.
+                    </p>
+                </div>
+
                 <div class="bg-slate-800 rounded-2xl shadow-sm border border-slate-700 p-5 mb-4 border-l-4 border-l-blue-500">
                     <div class="flex justify-between items-center mb-3">
                         <label class="font-bold text-slate-300 flex items-center gap-2">
@@ -205,18 +214,17 @@
         const DAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
         const VISUAL_DAYS = [1, 2, 3, 4, 5, 6, 0];
 
-        // Objeto Padrão (DNA da aplicação)
         let config = {
             priceC1: 3.80,
             priceC2: 7.95,
             schedule: [
-                { c1: 0, c2: 0 }, // Domingo
-                { c1: 0, c2: 0 }, // Segunda
-                { c1: 0, c2: 0 }, // Terça
-                { c1: 0, c2: 0 }, // Quarta
-                { c1: 0, c2: 0 }, // Quinta
-                { c1: 1, c2: 1 }, // Sexta
-                { c1: 0, c2: 0 }, // Sábado
+                { c1: 0, c2: 0 },
+                { c1: 0, c2: 0 },
+                { c1: 0, c2: 0 },
+                { c1: 0, c2: 0 },
+                { c1: 0, c2: 0 },
+                { c1: 1, c2: 1 },
+                { c1: 0, c2: 0 },
             ]
         };
 
@@ -292,11 +300,9 @@
         }
 
         function loadSettings() {
-            // Tenta carregar as alterações do utilizador
             const saved = localStorage.getItem('vt_config_v5');
             if (saved) {
                 try {
-                    // Se encontrar, substitui o objeto padrão pelo que o utilizador guardou
                     config = JSON.parse(saved);
                 } catch (e) {}
             }
@@ -312,7 +318,6 @@
                 config.schedule[i].c2 = parseInt(document.getElementById(`day_${i}_c2`).value) || 0;
             }
 
-            // Grava as novas alterações, que serão lidas na próxima vez que a app abrir
             localStorage.setItem('vt_config_v5', JSON.stringify(config));
             
             const msg = document.getElementById('cfg-message');
