@@ -205,33 +205,33 @@
         const DAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
         const VISUAL_DAYS = [1, 2, 3, 4, 5, 6, 0];
 
+        // Objeto Padrão (DNA da aplicação)
         let config = {
-            priceC1: 4.50,
-            priceC2: 6.00,
+            priceC1: 3.80,
+            priceC2: 7.95,
             schedule: [
-                { c1: 0, c2: 0 },
-                { c1: 2, c2: 2 },
-                { c1: 2, c2: 2 },
-                { c1: 2, c2: 2 },
-                { c1: 2, c2: 2 },
-                { c1: 2, c2: 2 },
-                { c1: 0, c2: 0 },
+                { c1: 0, c2: 0 }, // Domingo
+                { c1: 0, c2: 0 }, // Segunda
+                { c1: 0, c2: 0 }, // Terça
+                { c1: 0, c2: 0 }, // Quarta
+                { c1: 0, c2: 0 }, // Quinta
+                { c1: 1, c2: 1 }, // Sexta
+                { c1: 0, c2: 0 }, // Sábado
             ]
         };
 
-        // Função da Máscara de Dinheiro
         function applyCurrencyMask(event) {
             let input = event.target;
-            let value = input.value.replace(/\D/g, ""); // Remove tudo que não for número
+            let value = input.value.replace(/\D/g, ""); 
 
             if (value === "") {
                 input.value = "";
                 return;
             }
 
-            value = (parseInt(value, 10) / 100).toFixed(2); // Divide por 100 para criar os centavos
-            input.value = value.replace('.', ','); // Coloca a vírgula brasileira
-            saveBalances(); // Salva automaticamente o saldo digitado
+            value = (parseInt(value, 10) / 100).toFixed(2); 
+            input.value = value.replace('.', ','); 
+            saveBalances(); 
         }
 
         function parseBRFloat(valStr) {
@@ -275,7 +275,7 @@
         }
 
         function loadBalances() {
-            const savedBals = localStorage.getItem('vt_balances_v1');
+            const savedBals = localStorage.getItem('vt_balances_v2');
             if (savedBals) {
                 try {
                     const balances = JSON.parse(savedBals);
@@ -288,13 +288,15 @@
         function saveBalances() {
             const c1 = document.getElementById('balanceC1').value;
             const c2 = document.getElementById('balanceC2').value;
-            localStorage.setItem('vt_balances_v1', JSON.stringify({ c1: c1, c2: c2 }));
+            localStorage.setItem('vt_balances_v2', JSON.stringify({ c1: c1, c2: c2 }));
         }
 
         function loadSettings() {
-            const saved = localStorage.getItem('vt_config_v3_dark');
+            // Tenta carregar as alterações do utilizador
+            const saved = localStorage.getItem('vt_config_v5');
             if (saved) {
                 try {
+                    // Se encontrar, substitui o objeto padrão pelo que o utilizador guardou
                     config = JSON.parse(saved);
                 } catch (e) {}
             }
@@ -310,7 +312,8 @@
                 config.schedule[i].c2 = parseInt(document.getElementById(`day_${i}_c2`).value) || 0;
             }
 
-            localStorage.setItem('vt_config_v3_dark', JSON.stringify(config));
+            // Grava as novas alterações, que serão lidas na próxima vez que a app abrir
+            localStorage.setItem('vt_config_v5', JSON.stringify(config));
             
             const msg = document.getElementById('cfg-message');
             msg.classList.remove('hidden');
@@ -463,7 +466,6 @@
             loadBalances();
             switchTab('calculator');
 
-            // Aplica a máscara de dinheiro em todos os campos configurados
             document.querySelectorAll('.mask-money').forEach(input => {
                 input.addEventListener('input', applyCurrencyMask);
             });
